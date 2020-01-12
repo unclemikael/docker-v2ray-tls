@@ -42,8 +42,11 @@ cd docker-v2ray-tls/
 ```
 ##### Tips： firewalld 有时会不明原因只开启ipv6的端口，导致ipv4无法连接。我现在还搞不清楚。
 把 /etc/firewalld/firewalld.conf 中的
+
 FirewallBackend=nftables
+
 改成&darr;
+
 FirewallBackend=iptables
 ```shell
 #使用firewall-cmd --reload会导致centos8丢失连接
