@@ -1,0 +1,45 @@
+version: '3'
+services:
+  nginx:
+    image: nginx:alpine
+    environment:
+      TZ: 'Asia/Shanghai'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
+      - ./nginx/log/:/var/log/nginx/
+      - ./certbot/letsencrypt/:/etc/letsencrypt/:ro
+      - ./certbot/www/:/var/www/certbot/:ro
+    depends_on:
+      - v2ray
+    networks:
+      - web_nw
+    entrypoint: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/letsencrypt/:/etc/letsencrypt/:z
+      - ./certbot/www/:/var/www/certbot/:z
+    restart: always
+    networks:
+      - web_nw
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  v2ray:
+    image: v2ray/official:latest
+    environment:
+      TZ: 'Asia/Shanghai'
+    volumes:
+      - ./v2ray/config.json:/etc/v2ray/config.json:ro
+      - ./v2ray/log/:/var/log/v2ray/:Z
+    ports:
+      - "1234:1234"
+    restart: always
+    networks:
+      - web_nw
+networks:
+  web_nw:
+    driver: bridge

@@ -1,0 +1,45 @@
+version: '3'
+services:
+  v2ray:
+    image: v2ray/official:latest
+    environment:
+      TZ: 'Asia/Shanghai'
+    ports:
+      - "1234:1234"
+    volumes:
+      - ./config.json:/etc/v2ray/config.json:ro
+      - ./log/v2ray/:/var/log/v2ray/:Z
+    restart: always
+    networks:
+      - web_nw
+
+  caddy:
+    image: abiosoft/caddy:latest
+    environment:
+      TZ: 'Asia/Shanghai'
+      ACME_AGREE: 'true'
+    depends_on:
+      - v2ray
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/Caddyfile:ro
+      - ./log/caddy:/var/log/caddy/:Z
+    networks:
+      - web_nw
+
+  qr_generator:
+    image: centos:centos7
+    volumes:
+      - ./Caddyfile:/Caddyfile:ro
+      - ./config.json:/config.json:ro
+      - ./qr_generate.sh:/qr_generate.sh:ro
+    working_dir: /
+    entrypoint: ["/qr_generate.sh"]
+    networks:
+      - web_nw
+
+networks:
+  web_nw:
+    driver: bridge
