@@ -14,10 +14,11 @@ services:
       - ./certbot/www/:/var/www/certbot/:ro
     depends_on:
       - v2ray
+    restart: always
     networks:
       - web_nw
     entrypoint: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-
+  
   certbot:
     image: certbot/certbot:latest
     volumes:
@@ -27,7 +28,7 @@ services:
     networks:
       - web_nw
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
+  
   v2ray:
     image: v2ray/official:latest
     environment:
@@ -35,8 +36,6 @@ services:
     volumes:
       - ./v2ray/config.json:/etc/v2ray/config.json:ro
       - ./v2ray/log/:/var/log/v2ray/:Z
-    ports:
-      - "1234:1234"
     restart: always
     networks:
       - web_nw

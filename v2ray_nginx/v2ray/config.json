@@ -7,7 +7,7 @@
   "dns": {},
   "stats": {},
   "inbounds": [{
-    "port": 1234,
+    "port": 1080,
     "protocol": "vmess",
 	"streamSettings": {
       "security": "none",

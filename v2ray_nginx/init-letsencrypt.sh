@@ -1,5 +1,4 @@
 #!/bin/bash
-domains=($1)
 v2ray_conf="./v2ray/config.json"
 nginx_conf="./nginx/conf.d/app.conf"
 UUID=$(cat /proc/sys/kernel/random/uuid)
@@ -9,18 +8,19 @@ data_path="./certbot"
 email="" # Adding a valid address is strongly recommended
 staging=1 # Set to 1 if you're testing your setup to avoid hitting request limits
 
-if [ -n "$2" ];then url_path=$2;fi
-if [ -n "$3" ];then UUID=$3;fi
-
+domains=($1)
 if [ -z $1 ]; then
 read -p "Enter your domain > " domains[0]
 echo
 fi
-
 if [ $domains[0] == "" ]; then
   echo 'Error: unknow domain.' >&2
   exit 1
 fi
+if [ -n "$2" ];then url_path=$2;fi
+if [ -n "$3" ];then UUID=$3;fi
+if [ -n "$4" ];then staging=$4;fi
+
 
 if ! [ -x "$(command -v docker-compose)" ]; then
   echo 'Error: docker-compose is not installed.' >&2

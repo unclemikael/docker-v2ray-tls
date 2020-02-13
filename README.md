@@ -72,8 +72,8 @@ chmod u+x init-letsencrypt.sh
 ```
 也可以
 ```shell
-#init-letsencrypt.sh 域名 路径 UUID 如：
-./init-letsencrypt.sh example.org /ray 11485c51-b1d4-2a7c-9dcf-c09a6550f417
+#init-letsencrypt.sh 域名 路径 UUID 演示标志位(是否申请正式的证书 缺省为1，申请测试用证书) 如：
+./init-letsencrypt.sh example.org /ray 11485c51-b1d4-2a7c-9dcf-c09a6550f417 0
 ```
 #### 检查是否为up状态 Check status
 ```shell
