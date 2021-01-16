@@ -1,117 +1,105 @@
 # docker-v2ray-tls
-使用Docker 部署v2ray WebSocket + TLS + Web + certbot自动续签
-Docker deploy v2ray-tls in 1 line
 
-1 除了docker和docker-compose之外无需安装其他软件
+快速优雅 部署v2ray WebSocket + TLS 自动续签
 
-2 避免对vps的其他服务造成干扰（需要占用80、443端口）
+基于[nginx-proxy](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion)修改
 
-3 使用了最新的官方容器
+一行代码能做的事
 
++ [nginx-proxy](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion)管理证书
++ 随机UUID
++ 随机path(路径)
++ 生成二维码
++ 方便挂载其他网站、域名
 
-## 首先安装环境 Install environment
+## 使用方法（直接复制）
 
-##### Centos 7：
+### 一. 安装docker和docker-compose，或选择装好Docker的主机
+
 ```shell
-yum install docker docker-compose git -y
+#docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+bash get-docker.sh 1>/dev/null
+
+```
+
+```shell
+#docker-compose
+sudo curl -fsSL \
+"https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" \
+-o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+```
+
+```shell
+#start docker
 systemctl enable docker
 systemctl start docker
-firewall-cmd --permanent --add-service=http
-firewall-cmd --permanent --add-service=https
 
+```
+
+> Centos8 会安装失败，解决办法自行Google
+
+### 二.下载文件
+
+#### **方法1**
+
+> Curl
+
+```shell
+mkdir docker-v2ray-tls && cd docker-v2ray-tls
+
+curl -fsSL \
+https://raw.githubusercontent.com/unclemikael/docker-v2ray-tls/master/install.sh \
+-o install.sh
+
+curl -fsSL \
+https://raw.githubusercontent.com/unclemikael/docker-v2ray-tls/master/docker-compose.yml \
+-o docker-compose.yml
+
+curl -fsSL \
+https://raw.githubusercontent.com/unclemikael/docker-v2ray-tls/master/config.json \
+-o config.json
+
+sudo chmod u+x install.sh
+
+```
+
+#### **方法2**
+
+> Git clone
+
+```shell
 git clone https://github.com/unclemikael/docker-v2ray-tls.git
-cd docker-v2ray-tls/
+cd docker-v2ray-tls
+sudo chmod u+x install.sh
+
 ```
 
-------------
+### 三. 输入自己的域名（*）
 
-
-##### Centos 8:
 ```shell
-yum install git yum-utils  -y
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-yum install docker-ce --nobest -y
-pip3 install docker-compose
-systemctl enable --now docker
-firewall-cmd --permanent --add-service=http
-firewall-cmd --permanent --add-service=https
-firewall-cmd --reload
-
-git clone https://github.com/unclemikael/docker-v2ray-tls.git
-cd docker-v2ray-tls/
+./install.sh example.org
 ```
-##### Tips： firewalld 有时会不明原因只开启ipv6的端口，导致ipv4无法连接。我现在还搞不清楚。
-把 /etc/firewalld/firewalld.conf 中的
 
-FirewallBackend=nftables
+---
+> Tips：自定义路径、UUID
 
-改成&darr;
-
-FirewallBackend=iptables
 ```shell
-#使用firewall-cmd --reload会导致centos8丢失连接
-#Don't use firewall-cmd --reload
-systemctl restart firewalld
+./install.sh example.org /v2ray 8b8b1829-17c7-4e80-ad78-84160f04f363
 ```
 
-------------
+## 注意事项
 
-------------
++ 需要占用80、443端口
++ 关闭防火墙或开启80，443端口
++ 确保dns已经正确解析
++ 默认处于```LETSENCRYPT_TEST=true```测试证书模式，会提示不安全，不影响使用
++ 可到```docker-compose.yml```修改成```LETSENCRYPT_TEST=false```正式证书
 
+## 已测试系统
 
-## nginx:
-```shell
-cd v2ray_nginx/
-chmod u+x init-letsencrypt.sh
-```
-
-#### 执行初始化文件 Run init-letsencrypt.sh
-```shell
-#init-letsencrypt.sh 后面加上你的域名 如：
-./init-letsencrypt.sh example.org
-```
-也可以
-```shell
-#init-letsencrypt.sh 域名 路径 UUID 演示标志位(是否申请正式的证书 缺省为1，申请测试用证书) 如：
-./init-letsencrypt.sh example.org /ray 11485c51-b1d4-2a7c-9dcf-c09a6550f417 0
-```
-#### 检查是否为up状态 Check status
-```shell
-docker-compose ps -a
-```
-##### 如果失败执行
-```shell
-docker-compose down
-```
-
-------------
-
-------------
-
-## caddy
-
-#### 切换到 v2ray_caddy 目录
-```shell
-cd v2ray_caddy/
-chmod u+x qr_generate.sh
-```
-#### 在 caddy.conf 文件中修改成你的域名
-```shell
-vi caddy.conf
-```
-#### 最后在 v2ray_caddy 目录下执行
-```shell
-docker-compose up -d
-```
-#### 检查是否为up状态 Check status
-```shell
-docker-compose ps -a
-```
-##### 如果失败执行
-```shell
-docker-compose down
-```
-#### 扫描二维码
-```shell
-docker-compose logs qr_generator
-```
++ Centos 7 （ipv6有问题）
++ Debian 10 （√）
++ Ubuntu 20.10 （√）
