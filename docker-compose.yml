@@ -1,61 +1,65 @@
-version: '2'
 services:
   nginx-proxy:
-    image: jwilder/nginx-proxy
+    image: nginxproxy/nginx-proxy:latest
     container_name: nginx-proxy
     environment:
       - ENABLE_IPV6=true
-      - DEFAULT_HOST=${V2RAY_HOST}
+      - DEFAULT_HOST=${V2RAY_HOST?err}
       - TZ=Asia/Shanghai
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - conf:/etc/nginx/conf.d
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - dhparam:/etc/nginx/dhparam
+      - conf:/etc/nginx/conf.d:rw
+      - vhost:/etc/nginx/vhost.d:rw
+      - html:/usr/share/nginx/html:rw
       - certs:/etc/nginx/certs:ro
+      - log:/var/log:rw
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - nginx-proxy
-    restart: always
-    
-  letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion
-    container_name: nginx-proxy-le
+
+  acme-companion:
+    image: nginxproxy/acme-companion:latest
+    container_name: nginx-proxy-acme
     environment:
+      - DEFAULT_EMAIL=mail@exampleabc.org 
       - TZ=Asia/Shanghai
     volumes_from:
       - nginx-proxy
     volumes:
       - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - nginx-proxy
-    restart: always
-    
+
   v2ray:
-    image: v2ray/official:latest
-    container_name: v2ray
+    image: teddysun/xray:latest
+    container_name: xray
     environment:
       - TZ=Asia/Shanghai
       - VIRTUAL_PORT=1080
-      - VIRTUAL_HOST=${V2RAY_HOST}
-      - LETSENCRYPT_HOST=${V2RAY_HOST}
+      - VIRTUAL_HOST=${V2RAY_HOST?err}
+      - LETSENCRYPT_HOST=${V2RAY_HOST?err}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-}
+      # - CERT_NAME=default
       - HSTS=off
       - LETSENCRYPT_TEST=true
       - HTTPS_METHOD=redirect
     volumes:
-      - ./config.json:/etc/v2ray/config.json:ro
-      - /var/log/v2ray:/var/log/v2ray
+      - ./config.json:/etc/xray/config.json:ro
+      - certs:/etc/nginx/certs:ro
+      - log:/var/log:rw
     expose:
       - "1080"
+    depends_on:
+      - "nginx-proxy"
+      - "acme-companion"
+    command: sh -c "mkdir -p /var/log/xray && /usr/bin/xray -config /etc/xray/config.json"
     networks:
       - nginx-proxy
-    restart: always
-  
+
   qrencode:
     image: bxggs/qrencode:latest
     container_name: qrencode
@@ -67,17 +71,19 @@ volumes:
   conf:
   vhost:
   html:
-  dhparam:
   certs:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/etc/nginx/certs'
+  acme:
+  log:
 
 networks:
   nginx-proxy:
     driver: bridge
     enable_ipv6: true
     ipam:
-      driver: default
       config:
-        - subnet: 172.16.238.0/24
-          gateway: 172.16.238.1
-        - subnet: 2001:3984:3989::/64
-          gateway: 2001:3984:3989::1
+        - subnet: 2001:19f0:5:4096::/80

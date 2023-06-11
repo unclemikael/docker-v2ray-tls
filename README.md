@@ -19,24 +19,18 @@
 ```shell
 #docker
 curl -fsSL https://get.docker.com -o get-docker.sh
-bash get-docker.sh 1>/dev/null
-
+sh get-docker.sh
+#start docker
+systemctl enable docker
+systemctl start docker
 ```
 
 ```shell
 #docker-compose
 sudo curl -fsSL \
-"https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" \
--o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-```
-
-```shell
-#start docker
-systemctl enable docker
-systemctl start docker
-
+"https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+-o $HOME/.docker/cli-plugins/docker-compose
+sudo chmod +x $HOME/.docker/cli-plugins/docker-compose
 ```
 
 > Centos8 会安装失败，解决办法自行Google

@@ -26,10 +26,10 @@ function checkInput()
 
 function checkDocker()
 {
-    if ! [ -x "$(command -v docker-compose)" ]; then
-    echo 'Error: docker-compose is not installed.' >&2
-    exit 1
-    fi
+    # if ! [ -x "$(command -v docker-compose)" ]; then
+    # echo 'Error: docker-compose is not installed.' >&2
+    # exit 1
+    # fi
 
     if ! [ -x "$(command -v docker)" ]; then
     echo 'Error: docker is not installed.' >&2
@@ -42,8 +42,8 @@ function checkDocker()
 function downContainers()
 {
     #down running dockers
-    if [ -n "$(docker-compose ps -q)" ]; then 
-    docker-compose down --volumes; 
+    if [ -n "$(docker compose ps -q)" ]; then 
+    docker compose down --volumes; 
     fi
 }
 
@@ -55,14 +55,14 @@ function editConfigile()
 
 function dockerUp()
 {
-    docker-compose pull
+    docker compose pull
     echo
-    #docker-compose up -d
-    docker-compose up -d v2ray
+    #docker compose up -d
+    docker compose up -d v2ray
     sleep 1
-    docker-compose up -d nginx-proxy
+    docker compose up -d nginx-proxy
     sleep 2
-    docker-compose up -d letsencrypt
+    docker compose up -d acme-companion
 }
 
 function linkFile()
@@ -91,7 +91,7 @@ function qrcode()
 "add": "$V2RAY_HOST",
 "port": "443",
 "id": "${UUID}",
-"aid": "64",
+"aid": "0",
 "net": "ws",
 "type": "none",
 "host": "",
@@ -109,7 +109,7 @@ EOF
     echo '"add"':  ${V2RAY_HOST}
     echo '"port"': 443
     echo '"id"':   ${UUID}
-    echo '"aid"':  64
+    echo '"aid"':  0
     echo '"net"':  ws
     echo '"type"': none
     echo '"path"': ${url_path}
@@ -119,8 +119,8 @@ EOF
     echo
     sleep 1
     #docker run --rm bxggs/qrencode -t utf8 -o - ${VMESS_LINK}
-    docker-compose up qrencode
-    #docker-compose logs qrencode
+    docker compose up qrencode
+    #docker compose logs qrencode
 }
 
 function writeEnv()
